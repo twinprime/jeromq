@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import zmq.Options;
 import zmq.Own;
 import zmq.SocketBase;
@@ -19,6 +21,8 @@ import zmq.socket.Sockets;
 
 public class TcpListener extends Own implements IPollEvents
 {
+    private static final Logger logger = LoggerFactory.getLogger(TcpListener.class);
+
     private static boolean isWindows;
     static {
         String os = System.getProperty("os.name").toLowerCase();
@@ -81,6 +85,7 @@ public class TcpListener extends Own implements IPollEvents
         SocketChannel channel;
 
         try {
+            logger.debug("Start connection accept");
             channel = accept();
 
             //  If connection was reset by the peer in the meantime, just ignore it.
@@ -88,6 +93,7 @@ public class TcpListener extends Own implements IPollEvents
                 socket.eventAcceptFailed(endpoint, ZError.EADDRNOTAVAIL);
                 return;
             }
+            logger.debug("New connection accepted");
             TcpUtils.tuneTcpSocket(channel);
             TcpUtils.tuneTcpKeepalives(
                                        channel,

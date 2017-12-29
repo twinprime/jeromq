@@ -4,6 +4,8 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.nio.channels.SelectableChannel;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import zmq.Command;
 import zmq.Ctx;
 import zmq.Mailbox;
@@ -13,6 +15,8 @@ import zmq.poll.Poller;
 
 public class IOThread extends ZObject implements IPollEvents, Closeable
 {
+    private static final Logger logger = LoggerFactory.getLogger(IOThread.class);
+
     //  I/O thread accesses incoming commands via this mailbox.
     private final Mailbox mailbox;
 
@@ -75,6 +79,7 @@ public class IOThread extends ZObject implements IPollEvents, Closeable
             if (cmd == null) {
                 break;
             }
+            logger.debug("Received command: " + cmd);
 
             //  Process the command.
             cmd.process();

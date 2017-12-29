@@ -9,6 +9,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import zmq.io.IOThread;
 import zmq.io.SessionBase;
 import zmq.io.net.Address;
@@ -27,6 +29,8 @@ import zmq.util.MultiMap;
 
 public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeEvents
 {
+    private static final Logger logger = LoggerFactory.getLogger(SocketBase.class);
+
     private static class EndpointPipe
     {
         private final Own  endpoint;
@@ -933,6 +937,7 @@ public abstract class SocketBase extends Own implements IPollEvents, Pipe.IPipeE
 
         //  Process all the commands available at the moment.
         while (cmd != null) {
+            logger.debug("Process command: " + cmd);
             cmd.process();
             cmd = mailbox.recv(0);
         }

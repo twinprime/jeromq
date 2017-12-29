@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import zmq.Config;
 import zmq.Msg;
 import zmq.Options;
@@ -34,6 +36,8 @@ import zmq.util.Wire;
 // e.g. TCP socket or an UNIX domain socket.
 public class StreamEngine implements IEngine, IPollEvents
 {
+    private static final Logger logger = LoggerFactory.getLogger(StreamEngine.class);
+
     private final class HandshakeCommand extends MessageProcessor.Adapter
     {
         @Override
@@ -512,6 +516,7 @@ public class StreamEngine implements IEngine, IPollEvents
             }
 
             Msg msg = decoder.msg();
+            logger.debug("Decoded in msg: " + msg.toString());
             rc = processMsg.processMsg(msg);
             if (!rc) {
                 break;
@@ -521,6 +526,7 @@ public class StreamEngine implements IEngine, IPollEvents
         // Tear down the connection if we have failed to decode input data
         //  or the session has rejected the message.
         if (!rc) {
+            logger.debug("Failed to process in msg");
             if (!errno.is(ZError.EAGAIN)) {
                 error(ErrorReason.PROTOCOL);
                 return;
@@ -556,6 +562,7 @@ public class StreamEngine implements IEngine, IPollEvents
                 if (msg == null) {
                     break;
                 }
+                logger.debug("Encode out msg: " + msg);
                 encoder.loadMsg(msg);
                 int n = encoder.encode(outpos, Config.OUT_BATCH_SIZE.getValue() - outsize);
                 assert (n > 0);
@@ -589,8 +596,12 @@ public class StreamEngine implements IEngine, IPollEvents
         //  The engine is not terminated until we detect input error;
         //  this is necessary to prevent losing incoming messages.
         if (nbytes == -1) {
+            logger.debug("Failed to write bytes");
             ioObject.resetPollOut(handle);
             return;
+        }
+        else {
+            logger.debug("Wrote bytes " + nbytes);
         }
 
         outsize -= nbytes;

@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.net.SocketAddress;
 import java.nio.channels.SocketChannel;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import zmq.Options;
 import zmq.Own;
 import zmq.SocketBase;
@@ -22,6 +24,8 @@ import zmq.util.Utils;
 //  connection process.
 public class TcpConnecter extends Own implements IPollEvents
 {
+    private static final Logger logger = LoggerFactory.getLogger(TcpConnecter.class);
+
     //  ID of the timer used to delay the reconnection.
     protected static final int RECONNECT_TIMER_ID = 1;
 
@@ -312,6 +316,7 @@ public class TcpConnecter extends Own implements IPollEvents
         //  Connect to the remote peer.
         boolean rc;
         try {
+            logger.debug("Start channel connection");
             rc = fd.connect(sa);
             if (rc) {
                 //  Connect was successful immediately.
@@ -339,10 +344,12 @@ public class TcpConnecter extends Own implements IPollEvents
         try {
             //  Async connect has finished. Check whether an error occurred
             boolean finished = fd.finishConnect();
+            logger.debug("Channel connect finished: " + finished);
             assert (finished);
             return fd;
         }
         catch (IOException e) {
+            logger.debug("Connect failed", e);
             return null;
         }
     }
@@ -353,6 +360,7 @@ public class TcpConnecter extends Own implements IPollEvents
         assert (fd != null);
         try {
             fd.close();
+            logger.debug("Channel closed");
             socket.eventClosed(addr.toString(), fd);
         }
         catch (IOException e) {
